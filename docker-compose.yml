@@ -17,6 +17,7 @@ services:
     environment:
       PORT: 3000
       CORS_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgresql://applytrack:applytrack@postgres:5432/applytrack?schema=public
     ports:
       - '3000:3000'
     depends_on:
@@ -32,4 +33,3 @@ services:
 
 volumes:
   postgres_data:
-
