@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: applytrack
+      POSTGRES_PASSWORD: applytrack
+      POSTGRES_DB: applytrack
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      PORT: 3000
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - '5173:80'
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
