@@ -26,11 +26,13 @@ model User {
   id           String        @id @default(cuid())
   email        String        @unique
   name         String
+  passwordHash String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   companies    Company[]
   applications Application[]
   notes        Note[]
+  cvDocuments  CvDocument[]
 }
 
 model Company {
@@ -38,6 +40,8 @@ model Company {
   name         String
   website      String?
   location     String?
+  industry     String?
+  notes        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   userId       String
@@ -48,24 +52,49 @@ model Company {
 }
 
 model Application {
-  id        String              @id @default(cuid())
-  title     String
-  role      String
-  companyId String
-  userId    String
-  status    ApplicationStatus   @default(WISHLIST)
-  priority  ApplicationPriority @default(MEDIUM)
-  location  String?
-  appliedAt DateTime?
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-  company   Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  notes     Note[]
+  id              String              @id @default(cuid())
+  jobTitle        String
+  companyId       String
+  cvDocumentId    String?
+  location        String?
+  salaryRange     String?
+  contractType    String?
+  status          ApplicationStatus   @default(WISHLIST)
+  priority        ApplicationPriority @default(MEDIUM)
+  applicationDate DateTime?
+  interviewDate   DateTime?
+  notes           String?
+  recruiterName   String?
+  recruiterEmail  String?
+  jobPostUrl      String?
+  userId          String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  cvDocument      CvDocument?         @relation(fields: [cvDocumentId], references: [id], onDelete: SetNull)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appNotes        Note[]              @relation("appNotes")
 
   @@index([companyId])
+  @@index([cvDocumentId])
   @@index([userId])
   @@index([status])
+}
+
+model CvDocument {
+  id               String        @id @default(cuid())
+  userId           String
+  name             String
+  filePath         String
+  originalFileName String
+  mimeType         String
+  size             Int
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications     Application[]
+
+  @@index([userId])
 }
 
 model Note {
@@ -76,7 +105,7 @@ model Note {
   userId        String
   applicationId String?
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application? @relation("appNotes", fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([applicationId])

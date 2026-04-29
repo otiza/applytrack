@@ -48,3 +48,5 @@ backend/coverage/
 # Docker / local state
 postgres_data/
 *.pid
+backend/uploads/cvs/*
+!backend/uploads/cvs/.gitkeep

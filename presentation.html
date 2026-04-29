@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApplyTrack — Présentation du projet</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --bg-soft:#121a33;
+      --card:#121b2e;
+      --card-2:#17233c;
+      --text:#e7edff;
+      --muted:#9fb0d8;
+      --brand:#5b8cff;
+      --brand-2:#8a6dff;
+      --ok:#1ec98f;
+      --warn:#ffb84d;
+      --danger:#ff6f7d;
+      --line:#28385f;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+    html,body { margin:0; padding:0; background: radial-gradient(1200px 800px at 80% -20%, #1b2a52 0%, var(--bg) 45%), var(--bg); color:var(--text); font-family: Inter, Segoe UI, Roboto, Arial, sans-serif; scroll-behavior:smooth; }
+    body { overflow-x:hidden; }
+
+    .top-progress {
+      position: fixed; top: 0; left: 0; height: 4px; width: 100%; z-index: 50;
+      background: rgba(255,255,255,.06);
+    }
+    .top-progress > span {
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg,var(--brand),var(--brand-2));
+      transition: width .2s ease;
+    }
+
+    .side-nav {
+      position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+      z-index: 40; display:flex; flex-direction:column; gap:8px;
+      background: rgba(10,15,30,.5); border:1px solid rgba(255,255,255,.08);
+      padding:10px; border-radius:14px; backdrop-filter: blur(8px);
+    }
+    .side-nav a {
+      width:11px; height:11px; border-radius:50%; display:block;
+      background:#6c7aa5; opacity:.55; transition:.2s;
+      border:1px solid rgba(255,255,255,.25);
+    }
+    .side-nav a.active { opacity:1; transform:scale(1.15); background:linear-gradient(180deg,var(--brand),var(--brand-2)); }
+
+    main { scroll-snap-type: y mandatory; }
+    .slide {
+      min-height: 100vh; scroll-snap-align: start;
+      display:flex; align-items:center; padding: 64px 24px;
+      position: relative;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    .eyebrow {
+      color: var(--brand); letter-spacing:.12em; text-transform:uppercase;
+      font-weight:700; font-size:.78rem; margin-bottom:10px;
+    }
+    h1,h2,h3 { margin: 0 0 16px; line-height:1.1; }
+    h1 { font-size: clamp(2rem, 6vw, 4rem); }
+    h2 { font-size: clamp(1.5rem, 4vw, 2.4rem); }
+    p,li { color: var(--muted); font-size: 1.04rem; line-height: 1.6; }
+
+    .grid { display:grid; gap:16px; }
+    .g-2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .g-3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .g-4 { grid-template-columns: repeat(4,minmax(0,1fr)); }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:18px;
+      box-shadow: var(--shadow);
+    }
+    .badge {
+      display:inline-block; padding:5px 10px; border-radius:999px;
+      font-size:.8rem; color:#dce6ff; background:#23355f; border:1px solid #34508f;
+      margin:4px 6px 0 0;
+    }
+
+    .title-card {
+      background: linear-gradient(120deg, rgba(91,140,255,.2), rgba(138,109,255,.2));
+      border:1px solid #3c4f87;
+      border-radius:22px;
+      padding:28px;
+    }
+
+    .diagram, .flow {
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    }
+
+    .mermaid-wrap {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: var(--shadow);
+      overflow:auto;
+    }
+
+    .mermaid {
+      min-width: 620px;
+    }
+    .node {
+      background: var(--card-2);
+      border:1px solid #35518d;
+      border-radius:12px;
+      padding:10px 14px;
+      font-weight:600;
+      color:#dbe7ff;
+    }
+    .arrow { color:#9bb0e2; font-weight:700; }
+
+    .entity {
+      background: var(--card);
+      border:1px solid #3a4f87;
+      border-radius:14px;
+      padding:12px;
+    }
+    .entity h4 { margin:0 0 8px; font-size:1rem; color:#dfe8ff; }
+    .entity ul { margin:0; padding-left:16px; }
+
+    .shot {
+      height:160px; border-radius:12px; border:1px dashed #4d639e;
+      background: linear-gradient(135deg, rgba(91,140,255,.15), rgba(138,109,255,.1));
+      display:flex; align-items:center; justify-content:center; color:#bcd0ff; font-weight:600;
+    }
+
+    .status { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.8rem; }
+    .ok { background:rgba(30,201,143,.16); color:#7effd0; border:1px solid rgba(30,201,143,.35); }
+    .warn { background:rgba(255,184,77,.15); color:#ffd99c; border:1px solid rgba(255,184,77,.35); }
+
+    .footer-note {
+      position:absolute; bottom:14px; left:24px; color:#8ba0cf; font-size:.82rem;
+    }
+
+    .appear { opacity:0; transform: translateY(14px); transition: .55s ease; }
+    .appear.in { opacity:1; transform: translateY(0); }
+
+    @media (max-width: 980px){
+      .g-2,.g-3,.g-4{ grid-template-columns: 1fr; }
+      .side-nav { display:none; }
+      .slide { padding: 70px 16px; }
+      .mermaid { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-progress"><span id="progressBar"></span></div>
+
+  <nav class="side-nav" aria-label="Navigation des diapositives" id="dotNav"></nav>
+
+  <main id="slides">
+    <section class="slide" id="s1">
+      <div class="wrap">
+        <div class="title-card appear">
+          <div class="eyebrow">Projet scolaire • Techno Boost</div>
+          <h1>ApplyTrack</h1>
+          <h2>CRM de suivi des candidatures d’emploi</h2>
+          <p><strong>Présentateur :</strong> Abdessamad Maaiza</p>
+          <span class="badge">Application web full-stack</span>
+          <span class="badge">React + Node.js + PostgreSQL</span>
+        </div>
+        <p class="footer-note">Utilisez la molette, le défilement tactile ou les touches ↑/↓</p>
+      </div>
+    </section>
+
+    <section class="slide" id="s2">
+      <div class="wrap appear">
+        <div class="eyebrow">2. Problématique</div>
+        <h2>Le suivi de recherche d’emploi est souvent chaotique</h2>
+        <div class="grid g-2">
+          <div class="card">
+            <ul>
+              <li>Les utilisateurs postulent à plusieurs entreprises en même temps.</li>
+              <li>Le statut des candidatures se perd facilement : postulé, entretien, offre.</li>
+              <li>Les contacts recruteurs sont dispersés dans les messages et les notes.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul>
+              <li>Les dates d’entretien sont oubliées ou difficiles à organiser.</li>
+              <li>La version du CV utilisée pour chaque candidature n’est pas toujours claire.</li>
+              <li>Les relances et les notes de feedback ne sont pas centralisées.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s3">
+      <div class="wrap appear">
+        <div class="eyebrow">3. Solution</div>
+        <h2>ApplyTrack : un système de type CRM pour les chercheurs d’emploi</h2>
+        <p>ApplyTrack centralise les entreprises, les candidatures, les entretiens, les CV, les notes et la progression du pipeline dans une plateforme claire, avec des données sécurisées et propres à chaque utilisateur.</p>
+        <div class="grid g-3" style="margin-top:14px">
+          <div class="card"><h3>Organiser</h3><p>Suivre toutes les opportunités, de la liste de souhaits à la décision finale.</p></div>
+          <div class="card"><h3>Prioriser</h3><p>Se concentrer sur les candidatures importantes et les entretiens à venir.</p></div>
+          <div class="card"><h3>Décider</h3><p>Utiliser les statistiques et l’historique pour améliorer sa stratégie de recherche d’emploi.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s4">
+      <div class="wrap appear">
+        <div class="eyebrow">4. Fonctionnalités principales</div>
+        <h2>Capacités principales du produit</h2>
+        <div class="card">
+          <span class="badge">Authentification</span>
+          <span class="badge">Entreprises</span>
+          <span class="badge">Candidatures</span>
+          <span class="badge">Pipeline Kanban</span>
+          <span class="badge">Mise à jour du statut par glisser-déposer</span>
+          <span class="badge">Tableau de bord analytique</span>
+          <span class="badge">Calendrier des entretiens</span>
+          <span class="badge">Bibliothèque de CV</span>
+          <span class="badge">Association d’un CV à une candidature</span>
+          <span class="badge">Notes par candidature</span>
+          <span class="badge">Recherche / filtres</span>
+          <span class="badge">Paramètres : profil / mot de passe</span>
+        </div>
+        <div class="grid g-3" style="margin-top:14px">
+          <div class="shot">Capture d’écran provisoire — Tableau de bord</div>
+          <div class="shot">Capture d’écran provisoire — Pipeline</div>
+          <div class="shot">Capture d’écran provisoire — Calendrier</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s5">
+      <div class="wrap appear">
+        <div class="eyebrow">5. Stack technique</div>
+        <h2>Technologies par catégorie</h2>
+        <div class="grid g-3">
+          <div class="entity"><h4>Frontend</h4><p>React, TypeScript, Vite, Tailwind CSS</p></div>
+          <div class="entity"><h4>Backend</h4><p>Node.js, Express, Prisma</p></div>
+          <div class="entity"><h4>Base de données</h4><p>PostgreSQL</p></div>
+          <div class="entity"><h4>DevOps</h4><p>Docker, Docker Compose</p></div>
+          <div class="entity"><h4>UI/UX</h4><p>@dnd-kit, Recharts</p></div>
+          <div class="entity"><h4>Sécurité</h4><p>Authentification JWT, validation avec Zod</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s6">
+      <div class="wrap appear">
+        <div class="eyebrow">6. Vue d’ensemble de l’architecture</div>
+        <h2>Flux des requêtes et configuration conteneurisée</h2>
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+flowchart LR
+  U[Utilisateur] --> F[Frontend React]
+  F --> A[API Express]
+  A --> P[Prisma ORM]
+  P --> D[(PostgreSQL)]
+
+  subgraph Docker Compose
+    FE[Service Frontend]
+    BE[Service Backend]
+    DB[Service Base de donnees]
+  end
+
+  FE --> BE
+  BE --> DB
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s7">
+      <div class="wrap appear">
+        <div class="eyebrow">7. Conception de la base de données / UML</div>
+        <h2>Entités et relations</h2>
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+erDiagram
+  USER {
+    int id PK
+    string email
+    string passwordHash
+    datetime createdAt
+  }
+
+  COMPANY {
+    int id PK
+    int userId FK
+    string name
+    string industry
+  }
+
+  APPLICATION {
+    int id PK
+    int userId FK
+    int companyId FK
+    string jobTitle
+    string status
+    datetime interviewDate
+    int cvDocumentId FK
+  }
+
+  NOTE {
+    int id PK
+    int userId FK
+    int applicationId FK
+    string content
+  }
+
+  CVDOCUMENT {
+    int id PK
+    int userId FK
+    string name
+    string filePath
+    string mimeType
+    int size
+  }
+
+  USER ||--o{ COMPANY : possede
+  USER ||--o{ APPLICATION : gere
+  USER ||--o{ NOTE : ecrit
+  USER ||--o{ CVDOCUMENT : stocke
+  COMPANY ||--o{ APPLICATION : recoit
+  APPLICATION ||--o{ NOTE : contient
+  CVDOCUMENT ||--o{ APPLICATION : associe_a
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s8">
+      <div class="wrap appear">
+        <div class="eyebrow">8. Flux d’authentification</div>
+        <h2>Connexion sécurisée et API protégée</h2>
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+sequenceDiagram
+  participant U as Utilisateur
+  participant FE as Frontend
+  participant API as Backend API
+
+  U->>FE: Saisit email et mot de passe
+  FE->>API: POST /auth/login
+  API->>API: Compare le hash bcrypt
+  API-->>FE: Retourne JWT
+  FE->>FE: Stocke le token
+  FE->>API: Requete protegee avec Bearer JWT
+  API->>API: Middleware verifie le JWT
+  API-->>FE: Donnees autorisees
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s9">
+      <div class="wrap appear">
+        <div class="eyebrow">9. Pipeline Kanban</div>
+        <h2>Workflow visuel des statuts avec glisser-déposer</h2>
+        <div class="card">
+          <p><span class="status ok">Liste de souhaits</span> → <span class="status ok">Postulé</span> → <span class="status ok">Entretien</span> → <span class="status warn">Test technique</span> → <span class="status ok">Offre</span> / <span class="status warn">Refusé</span></p>
+          <p>Construit avec <strong>@dnd-kit</strong>. Les actions de glisser-déposer mettent immédiatement à jour le statut dans la base de données pour assurer la persistance entre les sessions.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s10">
+      <div class="wrap appear">
+        <div class="eyebrow">10. Fonctionnalité de gestion des CV</div>
+        <h2>Bibliothèque de CV + association aux candidatures</h2>
+        <div class="grid g-2">
+          <div class="card">
+            <ul>
+              <li>L’utilisateur peut téléverser plusieurs fichiers CV.</li>
+              <li>Validation : PDF/DOC/DOCX, avec limite de taille appliquée.</li>
+              <li>Les fichiers sont stockés dans le dossier uploads du backend.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul>
+              <li>Chaque candidature peut référencer un seul CV.</li>
+              <li>Utile pour savoir exactement quel CV a été envoyé.</li>
+              <li>Téléchargement et suppression depuis la bibliothèque personnelle de CV.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s11">
+      <div class="wrap appear">
+        <div class="eyebrow">11. Calendrier des entretiens</div>
+        <h2>Planifier les entretiens avec une visibilité par date</h2>
+        <div class="card">
+          <ul>
+            <li>Les candidatures avec <code>interviewDate</code> apparaissent dans la vue calendrier.</li>
+            <li>Met en évidence les entretiens à venir pour mieux prioriser.</li>
+            <li>Cliquer sur un événement ouvre les détails de la candidature liée.</li>
+            <li>Inclut des états de chargement et des états vides pour une UX propre.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s12">
+      <div class="wrap appear">
+        <div class="eyebrow">12. Décisions techniques</div>
+        <h2>Pourquoi ces choix ?</h2>
+        <div class="grid g-2">
+          <div class="card">
+            <p><strong>React + TypeScript :</strong> interface évolutive avec sécurité de typage.</p>
+            <p><strong>Express :</strong> couche API simple et flexible.</p>
+            <p><strong>Prisma + PostgreSQL :</strong> modélisation relationnelle et requêtes sécurisées.</p>
+            <p><strong>JWT :</strong> authentification stateless et pratique pour une SPA.</p>
+          </div>
+          <div class="card">
+            <p><strong>Docker :</strong> environnements cohérents pour le développement et la démonstration.</p>
+            <p><strong>Tailwind CSS :</strong> système d’interface moderne et rapide.</p>
+            <p><strong>@dnd-kit :</strong> interactions de glisser-déposer accessibles.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s13">
+      <div class="wrap appear">
+        <div class="eyebrow">13. Sécurité et validation</div>
+        <h2>Protection des données et intégrité</h2>
+        <div class="card">
+          <ul>
+            <li>Hachage des mots de passe avec bcrypt.</li>
+            <li>Routes protégées par JWT et middleware d’authentification.</li>
+            <li>Vérification de la propriété utilisateur sur chaque ressource.</li>
+            <li>Validation des payloads API avec les schémas Zod.</li>
+            <li>Validation des fichiers téléversés : type et taille.</li>
+            <li>Les utilisateurs ne peuvent accéder qu’à leurs propres données.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s14">
+      <div class="wrap appear">
+        <div class="eyebrow">14. Défis</div>
+        <h2>Principales difficultés d’implémentation</h2>
+        <div class="grid g-3">
+          <div class="card"><p>Gérer de manière fiable l’état d’authentification côté frontend.</p></div>
+          <div class="card"><p>Persister correctement les changements du pipeline par glisser-déposer.</p></div>
+          <div class="card"><p>Lier les candidatures aux entreprises et aux documents CV.</p></div>
+          <div class="card"><p>Gérer les téléversements de fichiers et le contrôle d’accès sécurisé.</p></div>
+          <div class="card"><p>Maintenir une configuration Docker stable pour tous les services.</p></div>
+          <div class="card"><p>Équilibrer une UX claire avec des workflows riches en fonctionnalités.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s15">
+      <div class="wrap appear">
+        <div class="eyebrow">15. Scénario de démonstration</div>
+        <h2>Script de démo en direct</h2>
+        <div class="card">
+          <ol>
+            <li>S’inscrire ou se connecter.</li>
+            <li>Créer une entreprise.</li>
+            <li>Téléverser un CV dans la bibliothèque de CV.</li>
+            <li>Créer une nouvelle candidature.</li>
+            <li>Associer le CV téléversé à cette candidature.</li>
+            <li>Déplacer la candidature dans le tableau Kanban.</li>
+            <li>Ajouter une date d’entretien.</li>
+            <li>Ouvrir le calendrier et vérifier l’événement d’entretien.</li>
+            <li>Consulter les statistiques du tableau de bord.</li>
+            <li>Ajouter des notes à la candidature.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s16">
+      <div class="wrap appear">
+        <div class="eyebrow">16. Améliorations futures</div>
+        <h2>Idées pour la roadmap</h2>
+        <div class="card">
+          <span class="badge">Rappels par e-mail</span>
+          <span class="badge">Lettres de motivation générées par IA</span>
+          <span class="badge">Export PDF</span>
+          <span class="badge">Historique des contacts recruteurs</span>
+          <span class="badge">Synchronisation calendrier</span>
+          <span class="badge">Mode sombre</span>
+          <span class="badge">Système de rôles</span>
+        </div>
+        <div class="grid g-2" style="margin-top:14px;">
+          <div class="shot">Capture d’écran provisoire — Analytique future</div>
+          <div class="shot">Capture d’écran provisoire — Vue mobile</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s17">
+      <div class="wrap appear">
+        <div class="eyebrow">17. Conclusion</div>
+        <h2>Ce que ce projet démontre</h2>
+        <div class="grid g-2">
+          <div class="card">
+            <ul>
+              <li>Développement full-stack de bout en bout.</li>
+              <li>Modélisation robuste d’une base de données relationnelle.</li>
+              <li>Authentification et autorisation sécurisées.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul>
+              <li>Workflow de déploiement dockerisé.</li>
+              <li>UI/UX professionnelle avec des patterns modernes.</li>
+              <li>Logique métier de type entreprise dans un cas d’usage réel.</li>
+            </ul>
+          </div>
+        </div>
+        <p style="margin-top:18px;"><strong>Merci.</strong> Questions ?</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      securityLevel: 'loose'
+    });
+
+    const sections = [...document.querySelectorAll('.slide')];
+    const nav = document.getElementById('dotNav');
+    const progressBar = document.getElementById('progressBar');
+
+    sections.forEach((s, i) => {
+      const a = document.createElement('a');
+      a.href = '#' + s.id;
+      a.title = 'Diapositive ' + (i + 1);
+      nav.appendChild(a);
+    });
+
+    const dots = [...nav.querySelectorAll('a')];
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          dots.forEach(d => d.classList.toggle('active', d.getAttribute('href') === '#' + id));
+          entry.target.querySelectorAll('.appear').forEach(el => el.classList.add('in'));
+        }
+      });
+      const scrollTop = window.scrollY;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      const pct = max > 0 ? (scrollTop / max) * 100 : 0;
+      progressBar.style.width = pct.toFixed(2) + '%';
+    }, { threshold: 0.55 });
+
+    sections.forEach(s => io.observe(s));
+
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      const pct = max > 0 ? (scrollTop / max) * 100 : 0;
+      progressBar.style.width = pct.toFixed(2) + '%';
+    });
+
+    const getCurrentIndex = () => {
+      const viewportMid = window.innerHeight * 0.4;
+      let bestIndex = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+
+      sections.forEach((section, index) => {
+        const rect = section.getBoundingClientRect();
+        const distance = Math.abs(rect.top - viewportMid);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = index;
+        }
+      });
+
+      return bestIndex;
+    };
+
+    const goToSlide = (index) => {
+      const safeIndex = Math.max(0, Math.min(sections.length - 1, index));
+      sections[safeIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+        e.preventDefault();
+        goToSlide(getCurrentIndex() + 1);
+      }
+      if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        goToSlide(getCurrentIndex() - 1);
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>

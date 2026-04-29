@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/main.tsx"],"version":"5.9.3"}
+{"root":["./src/App.tsx","./src/AuthPage.tsx","./src/auth.ts","./src/main.tsx","./src/components/AppShell.tsx","./src/components/Header.tsx","./src/components/Sidebar.tsx","./src/context/AuthContext.tsx","./src/pages/ApplicationDetail.tsx","./src/pages/Applications.tsx","./src/pages/Calendar.tsx","./src/pages/Companies.tsx","./src/pages/Dashboard.tsx","./src/pages/Pipeline.tsx","./src/pages/Settings.tsx"],"version":"5.9.3"}
