@@ -1,7 +1,7 @@
 export const TOKEN_STORAGE_KEY = 'applytrack_token';
 
 export function getApiBaseUrl() {
-  return import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+  return import.meta.env.VITE_API_URL ?? '/api';
 }
 
 export function getToken() {

@@ -20,8 +20,10 @@ services:
     build:
       context: ./backend
     environment:
+      NODE_ENV: production
       PORT: 3000
-      CORS_ORIGIN: http://localhost:5173
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://167.86.106.55:5173}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       DATABASE_URL: postgresql://applytrack:applytrack@postgres:5432/applytrack?schema=public
       JWT_SECRET: docker-dev-secret-change-me
       JWT_EXPIRES_IN: 7d
@@ -36,8 +38,8 @@ services:
   frontend:
     build:
       context: ./frontend
-    environment:
-      VITE_API_URL: http://localhost:3000
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
     ports:
       - '5173:80'
     depends_on:

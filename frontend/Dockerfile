@@ -1,5 +1,7 @@
 FROM node:22-alpine AS base
 WORKDIR /app
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
 COPY package*.json ./
 RUN npm config set fetch-retries 5 \
 	&& npm config set fetch-retry-factor 2 \

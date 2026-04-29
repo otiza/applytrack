@@ -1,5 +1,5 @@
 import express, { type Request, type Response } from 'express';
-import cors from 'cors';
+import cors, { type CorsOptions } from 'cors';
 import authRoutes from './routes/auth.js';
 import companiesRoutes from './routes/companies.js';
 import applicationsRoutes from './routes/applications.js';
@@ -10,9 +10,40 @@ import calendarRoutes from './routes/calendar.js';
 
 export function createApp() {
   const app = express();
-  const corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
+  const corsOrigin = process.env.CORS_ORIGIN?.trim() ?? '';
+  const allowedOrigins = corsOrigin
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
-  app.use(cors({ origin: corsOrigin }));
+  if (process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true') {
+    app.set('trust proxy', 1);
+  }
+
+  const corsOptions: CorsOptions = {
+    origin: (origin, callback) => {
+      // Allow same-origin/server-to-server calls (no Origin header)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // If CORS_ORIGIN is empty or contains '*', allow all origins
+      if (allowedOrigins.length === 0 || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  };
+
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
   app.use(express.json());
 
   app.get('/api/health', (_req: Request, res: Response) => {
