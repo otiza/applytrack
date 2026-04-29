@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { authRequest, getApiBaseUrl, getToken } from '../auth';
+import { authRequest, buildApiUrl, getToken } from '../auth';
 import { useAuth } from '../context/AuthContext';
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -178,7 +178,7 @@ export default function Settings() {
         return;
       }
 
-      const response = await fetch(`${getApiBaseUrl()}/api/cvs/${cv.id}/download`, {
+      const response = await fetch(buildApiUrl(`/api/cvs/${cv.id}/download`), {
         headers: {
           Authorization: `Bearer ${token}`
         }

@@ -1,7 +1,23 @@
 export const TOKEN_STORAGE_KEY = 'applytrack_token';
 
 export function getApiBaseUrl() {
-  return import.meta.env.VITE_API_URL ?? '/api';
+  return (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+}
+
+export function buildApiUrl(path: string) {
+  const base = getApiBaseUrl();
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // Prevent duplicated prefix when both base and path include /api
+  if (base.endsWith('/api') && normalizedPath.startsWith('/api/')) {
+    return `${base}${normalizedPath.slice(4)}`;
+  }
+
+  if (!base) {
+    return normalizedPath;
+  }
+
+  return `${base}${normalizedPath}`;
 }
 
 export function getToken() {
@@ -28,7 +44,7 @@ export async function authRequest<T>(path: string, init?: RequestInit): Promise<
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     ...init,
     headers
   });
