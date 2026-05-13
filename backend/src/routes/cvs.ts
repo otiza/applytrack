@@ -180,6 +180,46 @@ router.get('/:id/download', async (req: AuthenticatedRequest, res: Response) => 
   }
 });
 
+router.get('/:id/preview', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const cvId = String(req.params.id);
+    const existing = await prisma.cvDocument.findFirst({
+      where: { id: cvId, userId: req.user!.id },
+      select: {
+        id: true,
+        filePath: true,
+        originalFileName: true,
+        mimeType: true
+      }
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'CV not found.' });
+    }
+
+    if (existing.mimeType !== 'application/pdf') {
+      return res.status(400).json({ error: 'Preview is only available for PDF files.' });
+    }
+
+    const fileAbsolutePath = path.resolve(__dirname, '../../', existing.filePath.replace(/^\//, ''));
+    const fileExists = await fs.promises
+      .access(fileAbsolutePath, fs.constants.F_OK)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!fileExists) {
+      return res.status(404).json({ error: 'CV file not found on server.' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${existing.originalFileName}"`);
+    return res.sendFile(fileAbsolutePath);
+  } catch (error) {
+    console.error('Error previewing CV:', error);
+    return res.status(500).json({ error: 'Failed to preview CV.' });
+  }
+});
+
 router.use((error: unknown, _req: AuthenticatedRequest, res: Response, _next: Function) => {
   if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ error: 'Maximum file size is 5MB.' });

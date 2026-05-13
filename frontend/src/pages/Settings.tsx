@@ -58,6 +58,12 @@ export default function Settings() {
   const [newCvFile, setNewCvFile] = useState<File | null>(null);
   const [deletingCvId, setDeletingCvId] = useState<string | null>(null);
 
+  // ── CV preview state ──
+  const [previewCv, setPreviewCv] = useState<CvDocument | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
   // Seed profile form from auth context once loaded
   useEffect(() => {
     if (user) {
@@ -85,6 +91,15 @@ export default function Settings() {
       void loadCvs();
     }
   }, [user]);
+
+  // Cleanup preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   function formatBytes(size: number) {
     if (size < 1024) return `${size} B`;
@@ -209,6 +224,63 @@ export default function Settings() {
       const msg = err instanceof Error ? err.message : 'Failed to download CV.';
       show('error', msg);
     }
+  }
+
+  async function handleCvPreview(cv: CvDocument) {
+    if (cv.mimeType !== 'application/pdf') {
+      show('error', 'Preview is only available for PDF files.');
+      return;
+    }
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+    try {
+      const token = getToken();
+      if (!token) {
+        setPreviewError('You are not authenticated.');
+        setPreviewLoading(false);
+        return;
+      }
+
+      const response = await fetch(buildApiUrl(`/api/cvs/${cv.id}/preview`), {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to preview CV.';
+        try {
+          const payload = await response.json();
+          if (payload?.error) errorMessage = payload.error;
+        } catch {
+          // Keep fallback message when response body is not JSON.
+        }
+        setPreviewError(errorMessage);
+        setPreviewLoading(false);
+        return;
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setPreviewCv(cv);
+      setPreviewUrl(objectUrl);
+      setPreviewLoading(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to preview CV.';
+      setPreviewError(msg);
+      setPreviewLoading(false);
+    }
+  }
+
+  function closePreview() {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewCv(null);
+    setPreviewUrl(null);
+    setPreviewError(null);
+    setPreviewLoading(false);
   }
 
   async function handleProfileSave(e: React.FormEvent) {
@@ -475,6 +547,16 @@ export default function Settings() {
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    {cv.mimeType === 'application/pdf' ? (
+                      <button
+                        type="button"
+                        disabled={previewLoading}
+                        onClick={() => void handleCvPreview(cv)}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {previewLoading ? 'Loading…' : 'Preview'}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => void handleCvDownload(cv)}
@@ -497,6 +579,47 @@ export default function Settings() {
           )}
         </div>
       </section>
+
+      {/* ── CV Preview Modal ── */}
+      {previewCv ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur">
+          <div className="m-4 flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-200 bg-white shadow-lg">
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">{previewCv.name}</h3>
+                <p className="text-sm text-slate-500">{previewCv.originalFileName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closePreview}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Modal content */}
+            <div className="flex-1 overflow-auto">
+              {previewError ? (
+                <div className="flex items-center justify-center p-6">
+                  <p className="text-sm text-rose-600">{previewError}</p>
+                </div>
+              ) : previewUrl ? (
+                <iframe
+                  src={previewUrl}
+                  title={previewCv.name}
+                  className="h-[80vh] w-full border-0"
+                />
+              ) : (
+                <div className="flex items-center justify-center p-6">
+                  <p className="text-sm text-slate-500">Loading preview…</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
